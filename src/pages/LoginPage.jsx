@@ -3,59 +3,60 @@ import { FaUserAlt, FaEnvelope, FaLock } from "react-icons/fa";
 import { useState } from "react";
 import { Bounce, toast } from "react-toastify";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { useDispatch } from "react-redux";
+import { currentUserData } from "../slice";
 export default function LoginPage() {
-  const [formData , setFormData] = useState({email:""  , password:''})
-    const navigate = useNavigate()
-    
-const auth = getAuth();
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const auth = getAuth();
 
+  const handelSubmit = (e) => {
+    e.preventDefault();
 
-  const handelSubmit  = (e)=>{
-    e.preventDefault()
+    if (!formData.email || !formData.password)
+      return alert("all filds required");
+    signInWithEmailAndPassword(auth, formData.email, formData.password)
+      .then((userCredential) => {
+        const user = userCredential.user;
 
-    if(!formData.email  || !formData.password) return alert('all filds required')
-        signInWithEmailAndPassword(auth, formData.email, formData.password)
-        .then((userCredential) => {
-            
-            const user = userCredential.user;
-            console.log(user)
-            if(user.emailVerified === false){
-            toast.warning('please verify your email address', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
-                });
-            }else{
-                navigate('/')
-            }
-        })
-        .catch((error) => {
-            const errorCode = error.code;
-            const errorMessage = error.message;
-            if(errorCode){
-              toast.error('Something went wrong', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-                transition: Bounce,
-                });
-            }
-        });
+        localStorage.setItem('userInfo' , JSON.stringify(user))
+        dispatch(currentUserData(user));
 
-
-  }
-
+        if (user.emailVerified === false) {
+          toast.warning("please verify your email address", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            transition: Bounce,
+          });
+        } else {
+          navigate("/");
+        }
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        if (errorCode) {
+          toast.error("Something went wrong", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: false,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+            transition: Bounce,
+          });
+        }
+      });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#F9FBFC] px-4">
@@ -67,15 +68,15 @@ const auth = getAuth();
 
         {/* Form */}
         <form onSubmit={handelSubmit} className="space-y-5">
-
-
           {/* Email */}
           <div>
             <label className="block text-gray-600 text-sm mb-2">Email</label>
             <div className="flex items-center border border-gray-200 rounded-lg bg-[#F9FBFC] px-3 py-2 focus-within:ring-2 focus-within:ring-[#A7E6FF]">
               <FaEnvelope className="text-gray-400 text-sm mr-2" />
               <input
-                  onChange={(e)=>setFormData((prev)=>({...prev , email:e.target.value}))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, email: e.target.value }))
+                }
                 type="email"
                 placeholder="Enter your email"
                 className="w-full bg-transparent focus:outline-none text-gray-700 text-sm md:text-base"
@@ -89,7 +90,9 @@ const auth = getAuth();
             <div className="flex items-center border border-gray-200 rounded-lg bg-[#F9FBFC] px-3 py-2 focus-within:ring-2 focus-within:ring-[#A7E6FF]">
               <FaLock className="text-gray-400 text-sm mr-2" />
               <input
-                onChange={(e)=>setFormData((prev)=>({...prev , password:e.target.value}))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, password: e.target.value }))
+                }
                 type="password"
                 placeholder="Enter your password"
                 className="w-full bg-transparent focus:outline-none text-gray-700 text-sm md:text-base"

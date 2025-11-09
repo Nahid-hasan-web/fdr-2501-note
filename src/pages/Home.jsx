@@ -1,43 +1,49 @@
 import React, { useEffect, useState } from "react";
 import { FiPlus, FiSearch, FiTrash2, FiEdit3, FiUser } from "react-icons/fi";
-import { getDatabase, onValue, push, ref, set } from "firebase/database";
+import { getDatabase, onValue, push, ref, remove, set } from "firebase/database";
+import { useSelector } from "react-redux";
 const Home = () => {
   const [notes, setNotes] = useState([]);
   const [noteInput, setNoteInput] = useState("");
   const [title, setTitle] = useState("");
   const [cartColor , setCartColor] = useState('bg-white')
-
-    const db = getDatabase();
-
-
-
+  const db = getDatabase();
+  // ----------------- getting user info from the rdux
+  const currentUserInfo = useSelector((state)=>state.currentUser.value)
+  // ----------------- add note 
   const handelAddCard = ()=>{
     console.log(noteInput , title , cartColor)
-
     set(push(ref(db , 'notes/')) , {
+      creastorId: currentUserInfo.uid,
       title:title,
       noteDetails:noteInput,
       cardColor:cartColor
     }).then(()=>{
       console.log('note added')
     })
-
   }
-
-
-
+  // ---------------- get all notes by user id 
   useEffect(()=>{
     onValue(ref(db , 'notes/') , (myNotes)=>{
       let myArr = []
 
       myNotes.forEach((item)=>{
-        myArr.push({key:item.key , notes:item.val()})
+        if(currentUserInfo.uid == item.val().creastorId){
+          myArr.push({key:item.key , notes:item.val()})
+        }
       })
-
       setNotes(myArr)
-
     })
   },[])
+
+  // --------------- deelete data
+   const handelDelete = (noteItems)=>{
+    // remove(ref(db , 'notes/' + noteId))
+    console.log(noteItems)
+    set(ref(db , 'binNotes/'+ noteItems.key),noteItems.notes)
+
+
+   }
 
 
 
@@ -98,6 +104,7 @@ const Home = () => {
               <div className="absolute bottom-3 right-3 flex gap-3 text-gray-400">
                 <FiEdit3 className="cursor-pointer hover:text-[#48CFCB]" />
                 <FiTrash2
+                onClick={()=>handelDelete(item)}
                   className="cursor-pointer hover:text-red-500"
                 />
               </div>
